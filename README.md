@@ -65,6 +65,8 @@ VM1 pribar api1 y api2
 
 - curl -s http://localhost:8082/health | jq .
 
+- sudo nerdctl start api1_container api2_container #PorSiEstanApagadas
+
 
 ### Creacion dockerfile y construccion imagenes
 
@@ -96,13 +98,30 @@ VM3 Docker
 
 
 # Pruebas a API1
-- curl -s http://192.168.122.87:8081/api1-202200057/call-api2
-- curl -s http://192.168.122.87:8081/api1-202200057/call-api3
+curl -s http://192.168.122.87:8081/api1-202200057/call-api2
+curl -s http://192.168.122.87:8081/api1-202200057/call-api3
 
 # Pruebas a API2
-- curl -s http://192.168.122.87:8082/api2-202200057/call-api1
-- curl -s http://192.168.122.87:8082/api2-202200057/call-api3
+curl -s http://192.168.122.87:8082/api2-202200057/call-api1
+curl -s http://192.168.122.87:8082/api2-202200057/call-api3
 
 # Pruebas a API3 (VM2) 
-- curl -s http://192.168.122.56:8083/api3-202200057/call-api1
-- curl -s http://192.168.122.56:8083/api3-202200057/call-api2
+curl -s http://192.168.122.56:8083/api3-202200057/call-api1
+curl -s http://192.168.122.56:8083/api3-202200057/call-api2
+
+
+
+### EN FORMATO JQ
+Desde una terminal en linux mint pegar el siguiente bloque de codigo
+
+# Pruebas a API1
+curl -s http://192.168.122.87:8081/api1-202200057/call-api2 | jq .
+curl -s http://192.168.122.87:8081/api1-202200057/call-api3 | jq .
+
+# Pruebas a API2
+curl -s http://192.168.122.87:8082/api2-202200057/call-api1 | jq .
+curl -s http://192.168.122.87:8082/api2-202200057/call-api3 | jq .
+
+# Pruebas a API3 (VM2) 
+curl -s http://192.168.122.56:8083/api3-202200057/call-api1 | jq .
+curl -s http://192.168.122.56:8083/api3-202200057/call-api2 | jq .
