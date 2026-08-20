@@ -80,8 +80,8 @@ func callAPI2Handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/api3-202200057/call-api1", callAPI1Handler)
-	http.HandleFunc("/api3-202200057/call-api2", callAPI2Handler)
+	http.HandleFunc("/api3/202200057/call-api1", callAPI1Handler)
+	http.HandleFunc("/api3/202200057/call-api2", callAPI2Handler)
 
 	fmt.Printf("Servidor %s escuchando en el puerto %s...\n", API_NAME, PORT)
 	if err := http.ListenAndServe(PORT, nil); err != nil {
