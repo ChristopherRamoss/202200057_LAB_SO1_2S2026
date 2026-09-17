@@ -1,3 +1,4 @@
+#!/bin/sh
 
 
 echo "[INTRUDER] Iniciando intento de lectura de archivos sensibles..."
