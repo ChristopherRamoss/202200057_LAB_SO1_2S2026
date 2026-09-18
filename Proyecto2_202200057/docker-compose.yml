@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  valkey:
+    image: valkey/valkey:7.2-alpine
+    container_name: proyecto2_valkey
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: proyecto2_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Valkey habla el protocolo de Redis, asi que usamos el plugin
+      # community de Redis como datasource.
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - valkey
+
+volumes:
+  valkey_data:
+  grafana_data:
