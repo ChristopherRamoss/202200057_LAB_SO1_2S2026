@@ -1,5 +1,5 @@
 # Etapa 1: compilar
-FROM rust:1.85 AS builder
+FROM rust:1.90 AS builder
 WORKDIR /app
 COPY . .
 ENV CARGO_BUILD_JOBS=2
