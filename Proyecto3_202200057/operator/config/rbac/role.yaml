@@ -1,0 +1,28 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "pods", "pods/exec", "pods/log"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "daemonsets", "replicasets", "statefulsets"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["cache.mumnk8s.io"]
+    resources:
+      - valkeyinstances
+      - valkeyinstances/status
+      - valkeyinstances/finalizers
+      - grafanainstances
+      - grafanainstances/status
+      - grafanainstances/finalizers
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["services", "serviceaccounts", "persistentvolumeclaims", "configmaps"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+#+kubebuilder:scaffold:rules

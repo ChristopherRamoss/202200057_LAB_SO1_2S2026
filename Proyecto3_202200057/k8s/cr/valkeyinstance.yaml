@@ -1,0 +1,9 @@
+apiVersion: cache.mumnk8s.io/v1alpha1
+kind: ValkeyInstance
+metadata:
+  name: valkey
+  namespace: mumnk8s
+spec:
+  maxmemory: 128mb
+  persistence:
+    size: 1Gi

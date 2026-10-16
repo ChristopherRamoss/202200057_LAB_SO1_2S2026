@@ -1,0 +1,8 @@
+apiVersion: cache.mumnk8s.io/v1alpha1
+kind: GrafanaInstance
+metadata:
+  name: grafana
+  namespace: mumnk8s
+spec:
+  valkey:
+    address: valkey:6379

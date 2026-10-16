@@ -1,0 +1,17 @@
+image:
+  repository: zot.local:5000/mumnk8s/valkey
+  tag: "7.2-alpine"
+
+# Tope de memoria de Valkey. Se mantiene por debajo del limit del contenedor.
+maxmemory: 128mb
+
+persistence:
+  size: 1Gi
+  storageClass: ""
+
+resources:
+  requests:
+    memory: 32Mi
+    cpu: 50m
+  limits:
+    memory: 192Mi

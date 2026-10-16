@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-api
+  namespace: mumnk8s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rust-api
+  template:
+    metadata:
+      labels:
+        app: rust-api
+    spec:
+      containers:
+        - name: rust-api
+          image: zot.local:5000/mumnk8s/rust-api:v1
+          ports:
+            - containerPort: 8000
+          env:
+            - name: GO_API_URL
+              value: "http://go-api:8080/report"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-api
+  namespace: mumnk8s
+spec:
+  selector:
+    app: rust-api
+  ports:
+    - port: 8000
+      targetPort: 8000

@@ -1,0 +1,23 @@
+# permissions for end users to view valkeyinstances.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: mumnk8s-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: valkeyinstance-viewer-role
+rules:
+- apiGroups:
+  - cache.mumnk8s.io
+  resources:
+  - valkeyinstances
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cache.mumnk8s.io
+  resources:
+  - valkeyinstances/status
+  verbs:
+  - get
