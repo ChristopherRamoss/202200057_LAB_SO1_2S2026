@@ -1,0 +1,8 @@
+tail -f /tmp/proyecto2_cron.log
+
+
+watch -n 1 "docker ps --filter label=proyecto2=true --format '{{.Image}}' | sed -e 's#.*go-client.*#ALTO#' -e 's#.*alpine.*#BAJO#' -e 's#.*intruder.*#INTRUSO#' | sort | uniq -c"
+
+Si quisiera reinicir todo
+docker compose down -v
+docker compose up -d

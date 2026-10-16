@@ -1,16 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
 )
 
-// ===== Configuracion =====
 const (
 	CARNET           = "202200057"
 	ProcFilePath     = "/proc/continfo_pr2_so1_" + CARNET
@@ -20,35 +21,92 @@ const (
 	KernelLoadScript = "/home/christopher/Descargas/Eliminar/202200057_LAB_SO1_2S2026/Proyecto2_202200057/kernel/load_module.sh"
 	EBPFObjectPath   = "/home/christopher/Descargas/Eliminar/202200057_LAB_SO1_2S2026/Proyecto2_202200057/ebpf/kill_probe.o"
 	LoopInterval     = 30 * time.Second
+	CronLogPath      = "/tmp/proyecto2_cron.log"
+
+	// Tiempos de la terminacion en dos fases.
+	sigtermGrace = 3 * time.Second // espera tras SIGTERM antes de escalar a SIGKILL
+	sigkillGrace = 3 * time.Second // espera tras SIGKILL para verificar la muerte
+	ebpfGrace    = 2 * time.Second // espera maxima a que llegue el evento eBPF tras verificar la muerte
 )
 
-// PendingKills es un mapa PID -> Container protegido con mutex, porque lo
-// escribe el loop principal y lo lee/borra la gorutina de eventos eBPF al
-// mismo tiempo. Sin este candado, el acceso concurrente al mapa es
-// comportamiento indefinido en Go (lecturas/escrituras se pueden perder).
+// pendingKill representa un contenedor al que se le esta pidiendo terminar.
+// SignalSeen es la ultima senal (distinta de 0) que la sonda eBPF vio dirigida
+// al PID del contenedor. Que eBPF vea la senal NO significa que el contenedor
+// haya muerto: es solo la mitad de la confirmacion.
+type pendingKill struct {
+	Container  Container
+	SignalSeen uint32
+}
+
 type PendingKills struct {
 	mu sync.Mutex
-	m  map[int]Container
+	m  map[int]*pendingKill
 }
 
 func NewPendingKills() *PendingKills {
-	return &PendingKills{m: make(map[int]Container)}
+	return &PendingKills{m: make(map[int]*pendingKill)}
 }
 
 func (p *PendingKills) Add(pid int, c Container) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.m[pid] = c
+	p.m[pid] = &pendingKill{Container: c}
 }
 
-func (p *PendingKills) TakeIfPresent(pid int) (Container, bool) {
+// RecordSignal anota que eBPF vio una senal hacia pid. Devuelve true si ese
+// PID estaba pendiente.
+func (p *PendingKills) RecordSignal(pid int, sig uint32) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	c, ok := p.m[pid]
-	if ok {
-		delete(p.m, pid)
+	pk, ok := p.m[pid]
+	if !ok {
+		return false
 	}
-	return c, ok
+	pk.SignalSeen = sig
+	return true
+}
+
+// SignalSeen devuelve la ultima senal observada por eBPF para pid (0 si
+// ninguna).
+func (p *PendingKills) SignalSeen(pid int) uint32 {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if pk, ok := p.m[pid]; ok {
+		return pk.SignalSeen
+	}
+	return 0
+}
+
+func (p *PendingKills) Remove(pid int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	delete(p.m, pid)
+}
+
+// statusf escribe en el log del daemon y ademas agrega la linea al log del
+// cron, de modo que un solo `tail -f /tmp/proyecto2_cron.log` muestre todo el
+// ciclo: creacion (cron), decision de la guillotina y estado final (daemon).
+func statusf(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	log.Print(msg)
+
+	f, err := os.OpenFile(CronLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	fmt.Fprintf(f, "[daemon] %s: %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
+}
+
+func signalName(sig uint32) string {
+	switch sig {
+	case 9:
+		return "SIGKILL"
+	case 15:
+		return "SIGTERM"
+	default:
+		return "SIG(" + strconv.Itoa(int(sig)) + ")"
+	}
 }
 
 func main() {
@@ -87,17 +145,19 @@ func main() {
 
 	pendingKills := NewPendingKills()
 
+	// Lector de eventos eBPF. Solo REGISTRA la senal observada; la
+	// confirmacion final (contenedor realmente muerto) la hace
+	// terminateContainer.
 	go func() {
 		for ev := range probe.Events() {
 			log.Printf("[eBPF] kill detectado: emisor=%d receptor=%d senal=%d", ev.SrcPID, ev.DstPID, ev.Signal)
-			if c, ok := pendingKills.TakeIfPresent(int(ev.DstPID)); ok {
-				if err := valkey.LogContainerRemoved(c.ID, c.Name, "SIGTERM"); err != nil {
-					log.Printf("error registrando eliminacion en Valkey: %v", err)
-				}
-				if err := valkey.IncrEBPFEvent(); err != nil {
-					log.Printf("error incrementando contador eBPF: %v", err)
-				}
-				log.Printf(">>> Contenedor %s confirmado como eliminado (evento eBPF, PID %d).", c.Name, ev.DstPID)
+			if ev.Signal == 0 {
+				// kill(pid, 0) es solo una prueba de existencia, no termina nada.
+				continue
+			}
+			if pendingKills.RecordSignal(int(ev.DstPID), ev.Signal) {
+				log.Printf("[eBPF] senal %s hacia PID %d observada (pendiente de verificar que el contenedor muera)",
+					signalName(ev.Signal), ev.DstPID)
 			}
 		}
 	}()
@@ -152,24 +212,99 @@ func runIteration(valkey *ValkeyClient, pendingKills *PendingKills) {
 	toKill := DecideContainersToKill(snap, containers)
 	pidMap := matchPIDs(containers)
 
+	var wg sync.WaitGroup
+
 	for _, c := range toKill {
 		log.Printf("Decision: terminando contenedor %s (%s)", c.Name, c.Image)
 
-		if pid, ok := pidMap[c.ID]; ok {
-			pendingKills.Add(pid, c)
-			log.Printf("Esperando confirmacion eBPF para PID %d (contenedor %s)", pid, c.Name)
-		} else {
-			log.Printf("advertencia: no se pudo obtener el PID de %s via docker inspect, no se podra confirmar via eBPF", c.Name)
-		}
-
-		if err := KillContainer(c.ID); err != nil {
-			log.Printf("error enviando SIGTERM a %s: %v", c.ID, err)
+		pid, ok := pidMap[c.ID]
+		if !ok {
+			log.Printf("advertencia: no se pudo obtener el PID de %s via docker inspect, se omite", c.Name)
 			continue
 		}
 
-		go func(id string) {
-			time.Sleep(5 * time.Second)
-			_ = RemoveContainer(id)
-		}(c.ID)
+		// Se registra ANTES de enviar la senal para no perder el evento eBPF.
+		pendingKills.Add(pid, c)
+		log.Printf("Esperando confirmacion eBPF para PID %d (contenedor %s)", pid, c.Name)
+
+		wg.Add(1)
+		go func(c Container, pid int) {
+			defer wg.Done()
+			terminateContainer(c, pid, valkey, pendingKills)
+		}(c, pid)
 	}
+
+	// Cuando terminan TODAS las eliminaciones se vuelve a consultar Docker y se
+	// informa el estado real que quedo (sin bloquear el loop principal).
+	if len(toKill) > 0 {
+		go func() {
+			wg.Wait()
+			if alive, err := ListManagedContainers(); err == nil {
+				h, l, i := CountByCategory(alive)
+				statusf("Estado final (verificado con docker ps): %d alto, %d bajo, %d intruso(s) vivos", h, l, i)
+			}
+		}()
+	}
+}
+
+// terminateContainer termina un contenedor en dos fases (SIGTERM y, si sigue
+// vivo, SIGKILL) pidiendoselo a dockerd, y solo lo da por eliminado cuando se
+// cumplen DOS condiciones:
+//  1. dockerd confirma que el contenedor ya no esta corriendo, y
+//  2. la sonda eBPF vio la senal dirigida a su PID.
+func terminateContainer(c Container, pid int, valkey *ValkeyClient, pendingKills *PendingKills) {
+	if err := KillContainer(c.ID, "SIGTERM"); err != nil {
+		log.Printf("error enviando SIGTERM a %s (PID %d): %v", c.Name, pid, err)
+		pendingKills.Remove(pid) // no dejar pendientes que luego confirmen en falso
+		return
+	}
+
+	exited := WaitForContainerExit(c.ID, sigtermGrace)
+	if !exited {
+		// Si el PID 1 del contenedor no tiene manejador de SIGTERM, el kernel
+		// ignora la senal enviada desde fuera de su namespace: hay que escalar.
+		log.Printf("%s (PID %d) sigue corriendo tras SIGTERM, escalando a SIGKILL", c.Name, pid)
+		if err := KillContainer(c.ID, "SIGKILL"); err != nil {
+			log.Printf("error enviando SIGKILL a %s (PID %d): %v", c.Name, pid, err)
+		}
+		exited = WaitForContainerExit(c.ID, sigkillGrace)
+	}
+
+	if !exited {
+		log.Printf("ADVERTENCIA: %s (PID %d) sigue corriendo tras SIGKILL; NO se confirma como eliminado", c.Name, pid)
+		pendingKills.Remove(pid)
+		return
+	}
+
+	// El contenedor murio de verdad. Falta la evidencia eBPF: puede llegar con
+	// unos milisegundos de retraso por el ring buffer, asi que se espera un poco.
+	var sig uint32
+	deadline := time.Now().Add(ebpfGrace)
+	for {
+		if sig = pendingKills.SignalSeen(pid); sig != 0 {
+			break
+		}
+		if time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	pendingKills.Remove(pid)
+
+	if sig == 0 {
+		log.Printf("ADVERTENCIA: %s (PID %d) murio pero eBPF no observo ninguna senal hacia ese PID; no se registra como confirmado",
+			c.Name, pid)
+	} else {
+		sigName := signalName(sig)
+		if err := valkey.LogContainerRemoved(c.ID, c.Name, sigName); err != nil {
+			log.Printf("error registrando eliminacion en Valkey: %v", err)
+		}
+		if err := valkey.IncrEBPFEvent(); err != nil {
+			log.Printf("error incrementando contador eBPF: %v", err)
+		}
+		log.Printf(">>> Contenedor %s confirmado como eliminado (proceso muerto + evento eBPF, PID %d, senal %s).",
+			c.Name, pid, sigName)
+	}
+
+	_ = RemoveContainer(c.ID)
 }

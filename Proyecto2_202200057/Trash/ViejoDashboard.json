@@ -1,0 +1,92 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+      "type": "stat",
+      "title": "TOTAL RAM",
+      "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+      "targets": [
+        { "command": "get", "key": "system:ram:latest", "query": "$.total_ram_mb" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decbytes" } }
+    },
+    {
+      "id": 2,
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "type": "stat",
+      "title": "FREE RAM",
+      "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+      "targets": [
+        { "command": "get", "key": "system:ram:latest", "query": "$.free_ram_mb" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decbytes" } }
+    },
+    {
+      "id": 3,
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "type": "stat",
+      "title": "TOTAL CONTENEDORES ELIMINADOS",
+      "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+      "targets": [
+        { "command": "get", "key": "removed:total_count" }
+      ]
+    },
+      {
+        "id": 4,
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+        "type": "timeseries",
+        "title": "GRAFICA DE USO DE RAM EN EL TIEMPO",
+        "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+        "targets": [
+          { "command": "zrange", "key": "system:ram:timeline" }
+        ]
+      },
+    {
+      "id": 5,
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
+      "type": "piechart",
+      "title": "TOP 5 +RAM",
+      "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+      "targets": [
+        { "command": "zrevrange", "key": "ranking:ram", "query": "0 4 WITHSCORES" }
+      ]
+    },
+    {
+      "id": 6,
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
+      "type": "piechart",
+      "title": "TOP 5 +CPU",
+      "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+      "targets": [
+        { "command": "zrevrange", "key": "ranking:cpu", "query": "0 4 WITHSCORES" }
+      ]
+    },
+    {
+      "id": 7,
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
+      "type": "stat",
+      "title": "eBPF EVENT COUNTER",
+      "datasource": { "type": "redis-datasource", "uid": "Valkey" },
+      "targets": [
+        { "command": "get", "key": "ebpf:events_total" }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "PANEL DE CONTENEDORES POR #202200057",
+  "uid": "proyecto2_so1_202200057"
+}

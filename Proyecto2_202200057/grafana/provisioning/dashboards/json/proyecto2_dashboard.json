@@ -1,0 +1,561 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "deckbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^total_ram_kb$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "key": "system:ram:latest",
+          "keyName": "system:ram:latest",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "TOTAL RAM",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "keepTime": false,
+            "replace": true,
+            "source": "Value"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^free_ram_kb$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "key": "system:ram:latest",
+          "keyName": "system:ram:latest",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "FREE RAM",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "replace": true,
+            "source": "Value"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "key": "removed:total_count",
+          "keyName": "removed:total_count",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "TOTAL CONTENEDORES ELIMINADOS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^used_ram_kb$/",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "aggregation": "count",
+          "bucket": 2,
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "fill": true,
+          "filter": "system:ram:timeline",
+          "key": "system:ram:timeline",
+          "keyName": "system:ram:latest",
+          "legend": "0",
+          "max": "-1",
+          "min": "0",
+          "query": "",
+          "refId": "A",
+          "streaming": false,
+          "tsGroupByLabel": "1",
+          "tsReducer": "sum",
+          "type": "command",
+          "value": "50",
+          "zrangeQuery": ""
+        }
+      ],
+      "title": "RAM EN USO",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "keepTime": false,
+            "replace": true,
+            "source": "Value"
+          }
+        }
+      ],
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 12
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "command": "zrange",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "key": "ranking:ram",
+          "keyName": "ranking:ram",
+          "max": "4",
+          "min": "0",
+          "query": "",
+          "refId": "A",
+          "type": "command",
+          "zrangeQuery": ""
+        }
+      ],
+      "title": "TOP 5 +RAM",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json"
+          }
+        }
+      ],
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 12
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "command": "zrange",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "key": "ranking:cpu",
+          "keyName": "ranking:cpu",
+          "max": "4",
+          "min": "0",
+          "query": "",
+          "refId": "A",
+          "type": "command",
+          "zrangeQuery": ""
+        }
+      ],
+      "title": "TOP 5 +CPU",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "P2392AD6B339F5133"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "P2392AD6B339F5133"
+          },
+          "key": "ebpf:events_total",
+          "keyName": "ebpf:events_total",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "eBPF EVENT COUNTER",
+      "type": "stat"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timeRangeUpdatedDuringEditOrView": false,
+  "timepicker": {},
+  "timezone": "",
+  "title": "PANEL DE CONTENEDORES POR #202200057",
+  "uid": "proyecto2_so1_202200057",
+  "version": 1,
+  "weekStart": ""
+}

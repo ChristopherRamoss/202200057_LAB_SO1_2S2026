@@ -36,11 +36,14 @@ func (v *ValkeyClient) LogSystemSnapshot(snap *Snapshot) error {
 	if err := v.rdb.Set(v.ctx, "system:ram:latest", data, 0).Err(); err != nil {
 		return err
 	}
+	ramUsedMB := float64(snap.System.UsedRAMKB) / 1024.0
 	return v.rdb.ZAdd(v.ctx, "system:ram:timeline", redis.Z{
-		Score:  float64(ts),
-		Member: key,
+		Score:  float64(time.Now().UnixMilli()),
+		Member: fmt.Sprintf("%.2f", ramUsedMB),
 	}).Err()
 }
+
+// CAMBIE ACA
 
 // LogContainerRemoved SOLO debe llamarse cuando eBPF confirmo la terminacion
 // real via sys_kill (ver ebpfprobe.go / main.go).

@@ -1,12 +1,11 @@
 apiVersion: 1
 
 providers:
-  - name: "Proyecto 2 SO1"
+  - name: 'Proyecto 2 Provider'
     orgId: 1
-    folder: ""
+    folder: ''
     type: file
     disableDeletion: false
-    updateIntervalSeconds: 30
-    allowUiUpdates: true
+    editable: true
     options:
-      path: /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards/json
