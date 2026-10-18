@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: zot.local:5000/mumnk8s/operator
-  newTag: v3
+  newTag: v4
