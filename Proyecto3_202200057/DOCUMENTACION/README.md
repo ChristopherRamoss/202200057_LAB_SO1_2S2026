@@ -18,6 +18,13 @@ done
 echo listo
 
 
+
+# activar Locust
+source ~/locust-env/bin/activate
+cd ~/Descargas/Eliminar/202200057_LAB_SO1_2S2026/Proyecto3_202200057/locust
+locust -f locustfile.py
+
+
 | Prueba | Usuarios | RPS | Fallos | Mediana | p95 | p99 | Réplicas de Rust |
 |--------|----------|-----|--------|---------|-----|-----|------------------|
 | Base | 10 | 33.1 | 0% | 5 ms | 10 ms | 14 ms | 1 |

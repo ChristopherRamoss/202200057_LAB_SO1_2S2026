@@ -1,0 +1,41 @@
+collectors:
+  containerd:
+    enabled: true
+    socket: /run/k3s/containerd/containerd.sock
+  crio:
+    enabled: false
+  docker:
+    enabled: false
+customRules:
+  mumnk8s-rules.yaml: |-
+    - macro: mumnk8s_workload
+      condition: >
+        k8s.ns.name = "mumnk8s" and
+        (k8s.pod.name startswith "rust-api" or
+         k8s.pod.name startswith "go-deployment1" or
+         k8s.pod.name startswith "go-deployment2" or
+         k8s.pod.name startswith "consumer")
+
+    - rule: Lectura de archivo sensible en pods MUMNK8s
+      desc: >
+        Detecta la apertura para lectura de /etc/shadow o de cualquier archivo
+        dentro de /app/secretos en los pods de la API Rust y de los servicios Go.
+      condition: >
+        open_read and container and mumnk8s_workload and
+        (fd.name = /etc/shadow or fd.name startswith /app/secretos/)
+      output: >
+        ALERTA MUMNK8s: lectura de archivo sensible
+        (archivo=%fd.name comando=%proc.cmdline usuario=%user.name
+        pod=%k8s.pod.name namespace=%k8s.ns.name contenedor=%container.name)
+      priority: WARNING
+      tags: [mumnk8s, filesystem, sensible]
+driver:
+  kind: modern_ebpf
+falco:
+  rule_matching: all
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    memory: 128Mi
+tty: true
