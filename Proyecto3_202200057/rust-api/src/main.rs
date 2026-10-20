@@ -5,7 +5,16 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
-use std::{env, sync::Arc};
+use std::{
+    env,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+};
+
+// Contador de reportes procesados por este pod (se imprime en los logs)
+static CONTADOR: AtomicU64 = AtomicU64::new(0);
 
 // La forma del JSON que esperamos (la misma del enunciado)
 #[derive(Debug, Deserialize, Serialize)]
@@ -24,12 +33,10 @@ struct AppState {
 
 #[tokio::main]
 async fn main() {
-    // Configuración por variables de entorno, con valores por defecto
     let go_url = env::var("GO_API_URL")
         .unwrap_or_else(|_| "http://go-api:8080/report".to_string());
     let port = env::var("PORT").unwrap_or_else(|_| "8000".to_string());
 
-    // Un solo cliente HTTP reutilizado (mantiene conexiones abiertas)
     let state = Arc::new(AppState {
         client: reqwest::Client::new(),
         go_url,
@@ -47,7 +54,6 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-// Kubernetes lo usará para saber si el pod está vivo
 async fn health() -> &'static str {
     "ok"
 }
@@ -56,23 +62,40 @@ async fn report(
     State(state): State<Arc<AppState>>,
     Json(r): Json<WarReport>,
 ) -> (StatusCode, String) {
-    // Validación básica: el país debe ser un código de 3 letras
     if r.country.len() != 3 {
+        println!("[rust-api] rechazado: country invalido '{}'", r.country);
         return (StatusCode::BAD_REQUEST, "country debe tener 3 letras".into());
     }
 
-    // Reenviamos el reporte al servicio Go
+    let n = CONTADOR.fetch_add(1, Ordering::Relaxed) + 1;
+
     match state.client.post(&state.go_url).json(&r).send().await {
         Ok(resp) if resp.status().is_success() => {
+            println!(
+                "[rust-api] #{} {} aviones={} barcos={} -> go-api OK",
+                n, r.country, r.warplanes_in_air, r.warships_in_water
+            );
             (StatusCode::OK, r#"{"status":"forwarded"}"#.into())
         }
-        Ok(resp) => (
-            StatusCode::BAD_GATEWAY,
-            format!("el servicio Go respondió {}", resp.status()),
-        ),
-        Err(e) => (
-            StatusCode::BAD_GATEWAY,
-            format!("no se pudo contactar al servicio Go: {e}"),
-        ),
+        Ok(resp) => {
+            println!(
+                "[rust-api] #{} {} -> go-api respondio {}",
+                n, r.country, resp.status()
+            );
+            (
+                StatusCode::BAD_GATEWAY,
+                format!("el servicio Go respondió {}", resp.status()),
+            )
+        }
+        Err(e) => {
+            println!(
+                "[rust-api] #{} {} -> error contactando a go-api: {}",
+                n, r.country, e
+            );
+            (
+                StatusCode::BAD_GATEWAY,
+                format!("no se pudo contactar al servicio Go: {e}"),
+            )
+        }
     }
 }

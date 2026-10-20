@@ -7,15 +7,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rust-api
+      app: api-rust
   template:
     metadata:
       labels:
-        app: rust-api
+        app: api-rust
     spec:
       containers:
         - name: rust-api
-          image: zot.local:5000/mumnk8s/rust-api:v1
+          image: zot.local:5000/mumnk8s/rust-api:v2
           ports:
             - containerPort: 8000
           env:
@@ -42,7 +42,7 @@ metadata:
   namespace: mumnk8s
 spec:
   selector:
-    app: rust-api
+    app: api-rust
   ports:
     - port: 8000
       targetPort: 8000
