@@ -86,6 +86,9 @@ func send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("[grpc-client] %s aviones=%d barcos=%d -> SendReport: %s",
+		rep.Country, rep.WarplanesInAir, rep.WarshipsInWater, resp.GetStatus())
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": resp.GetStatus()})
 }

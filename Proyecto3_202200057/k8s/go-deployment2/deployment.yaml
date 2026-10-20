@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: grpc-server
-          image: zot.local:5000/mumnk8s/grpc-server:v1
+          image: zot.local:5000/mumnk8s/grpc-server:v2
           ports:
             - containerPort: 50051
           env:

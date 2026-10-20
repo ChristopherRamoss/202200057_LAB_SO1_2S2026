@@ -40,6 +40,9 @@ func (s *server) SendReport(ctx context.Context, req *pb.WarReportRequest) (*pb.
 	}
 	body, _ := json.Marshal(rep)
 
+	log.Printf("[grpc-server] reporte recibido: %s aviones=%d barcos=%d",
+		rep.Country, rep.WarplanesInAir, rep.WarshipsInWater)
+
 	httpReq, _ := http.NewRequestWithContext(ctx, http.MethodPost, s.writerURL, bytes.NewReader(body))
 	httpReq.Header.Set("Content-Type", "application/json")
 

@@ -28,7 +28,7 @@ spec:
             limits:
               memory: "64Mi"
         - name: grpc-client
-          image: zot.local:5000/mumnk8s/grpc-client:v1
+          image: zot.local:5000/mumnk8s/grpc-client:v2
           ports:
             - containerPort: 9090
           env:
