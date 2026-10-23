@@ -96,6 +96,13 @@ Esperado: `HTTP/1.1 200 OK` y `{"status":"forwarded"}`.
 
 Esperado: el catálogo con las imágenes del proyecto (`go-api`, `grpc-client`, `grpc-server`, `rabbit-writer`, `consumer`, `rust-api`, `rabbitmq`, `valkey`, `grafana`, `operator`) y `test/busybox`.
 
+
+### Por si pide comprobar el artefact
+```bash
+  oras repo tags --ca-file ~/zot/certs/server.crt zot.local:5000/mumnk8s/config-reportes
+  oras manifest fetch --ca-file ~/zot/certs/server.crt zot.local:5000/mumnk8s/config-reportes:v1
+
+```
 ---
 
 ## Vuelta 2 — Locust, API Rust, gRPC (Go) y HPA
